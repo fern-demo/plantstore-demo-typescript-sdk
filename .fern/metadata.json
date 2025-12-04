@@ -3,6 +3,7 @@
     "generatorName": "fernapi/fern-typescript-sdk",
     "generatorVersion": "3.35.8",
     "generatorConfig": {
-        "namespaceExport": "plantstore"
+        "namespaceExport": "plantstore",
+        "noSerdeLayer": false
     }
 }

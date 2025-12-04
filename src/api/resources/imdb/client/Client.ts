@@ -6,6 +6,7 @@ import { mergeHeaders } from "../../../../core/headers.js";
 import * as core from "../../../../core/index.js";
 import { handleNonStatusCodeError } from "../../../../errors/handleNonStatusCodeError.js";
 import * as errors from "../../../../errors/index.js";
+import * as serializers from "../../../../serialization/index.js";
 import * as plantstore from "../../../index.js";
 
 export declare namespace ImdbClient {
@@ -56,7 +57,10 @@ export class ImdbClient {
             contentType: "application/json",
             queryParameters: requestOptions?.queryParams,
             requestType: "json",
-            body: request,
+            body: serializers.CreateMovieRequest.jsonOrThrow(request, {
+                unrecognizedObjectKeys: "strip",
+                omitUndefined: true,
+            }),
             timeoutMs: (requestOptions?.timeoutInSeconds ?? this._options?.timeoutInSeconds ?? 60) * 1000,
             maxRetries: requestOptions?.maxRetries ?? this._options?.maxRetries,
             abortSignal: requestOptions?.abortSignal,
@@ -64,7 +68,16 @@ export class ImdbClient {
             logging: this._options.logging,
         });
         if (_response.ok) {
-            return { data: _response.body as plantstore.MovieId, rawResponse: _response.rawResponse };
+            return {
+                data: serializers.MovieId.parseOrThrow(_response.body, {
+                    unrecognizedObjectKeys: "passthrough",
+                    allowUnrecognizedUnionMembers: true,
+                    allowUnrecognizedEnumValues: true,
+                    skipValidation: true,
+                    breadcrumbsPrefix: ["response"],
+                }),
+                rawResponse: _response.rawResponse,
+            };
         }
 
         if (_response.error.reason === "status-code") {
@@ -108,7 +121,7 @@ export class ImdbClient {
             url: core.url.join(
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)),
-                `/movies/${core.url.encodePathParam(id)}`,
+                `/movies/${core.url.encodePathParam(serializers.MovieId.jsonOrThrow(id, { omitUndefined: true }))}`,
             ),
             method: "GET",
             headers: _headers,
@@ -120,14 +133,29 @@ export class ImdbClient {
             logging: this._options.logging,
         });
         if (_response.ok) {
-            return { data: _response.body as plantstore.Movie, rawResponse: _response.rawResponse };
+            return {
+                data: serializers.Movie.parseOrThrow(_response.body, {
+                    unrecognizedObjectKeys: "passthrough",
+                    allowUnrecognizedUnionMembers: true,
+                    allowUnrecognizedEnumValues: true,
+                    skipValidation: true,
+                    breadcrumbsPrefix: ["response"],
+                }),
+                rawResponse: _response.rawResponse,
+            };
         }
 
         if (_response.error.reason === "status-code") {
             switch (_response.error.statusCode) {
                 case 404:
                     throw new plantstore.MovieDoesNotExistError(
-                        _response.error.body as plantstore.MovieId,
+                        serializers.MovieId.parseOrThrow(_response.error.body, {
+                            unrecognizedObjectKeys: "passthrough",
+                            allowUnrecognizedUnionMembers: true,
+                            allowUnrecognizedEnumValues: true,
+                            skipValidation: true,
+                            breadcrumbsPrefix: ["response"],
+                        }),
                         _response.rawResponse,
                     );
                 default:
