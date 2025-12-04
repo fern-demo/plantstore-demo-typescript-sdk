@@ -1,0 +1,8 @@
+{
+    "cliVersion": "3.0.1",
+    "generatorName": "fernapi/fern-typescript-sdk",
+    "generatorVersion": "3.35.8",
+    "generatorConfig": {
+        "namespaceExport": "plantstore"
+    }
+}
